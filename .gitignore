@@ -1,0 +1,81 @@
+# Executable files
+*.exe
+*.out
+*.app
+
+# Object files
+*.o
+*.obj
+
+# Static libraries
+*.lib
+*.a
+
+# Dynamic libraries
+*.dll
+*.so
+*.dylib
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Compiler-generated files
+*.gch
+*.pch
+
+# IDE files
+.vscode/
+*.vcxproj*
+*.sln
+*.suo
+*.user
+*.ncb
+*.aps
+*.plg
+*.opt
+*.clw
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# Build directories
+build/
+debug/
+release/
+bin/
+obj/
+
+# Temporary files
+*~
+*.swp
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Backup files
+*.bak
+*.backup

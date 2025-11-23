@@ -1,0 +1,125 @@
+## Mục 0 
+
+my laptop: 
+
+Host Name:                     DESKTOP-EIUQB5T
+OS Name:                       Microsoft Windows 11 Home Single Language
+OS Version:                    10.0.26100 N/A Build 26100
+OS Manufacturer:               Microsoft Corporation
+OS Configuration:              Standalone Workstation
+OS Build Type:                 Multiprocessor Free
+Registered Owner:              Men
+Registered Organization:       N/A
+Product ID:                    00327-36339-18975-AAOEM
+Original Install Date:         04/02/2025, 7:13:38 CH
+System Boot Time:              12/11/2025, 7:45:27 CH
+System Manufacturer:           ASUSTeK COMPUTER INC.
+System Model:                  ZenBook UX363EA_UX363EA
+System Type:                   x64-based PC
+Processor(s):                  1 Processor(s) Installed.
+                               [01]: Intel64 Family 6 Model 140 Stepping 1 GenuineIntel ~2419 Mhz
+BIOS Version:                  American Megatrends International, LLC. UX363EA.315, 10/08/2021
+Windows Directory:             C:\WINDOWS
+System Directory:              C:\WINDOWS\system32
+Boot Device:                   \Device\HarddiskVolume1
+System Locale:                 vi;Vietnamese
+Input Locale:                  en-us;English (United States)
+Time Zone:                     (UTC+07:00) Bangkok, Hanoi, Jakarta
+Total Physical Memory:         7.884 MB
+Available Physical Memory:     936 MB
+Virtual Memory: Max Size:      23.182 MB
+Virtual Memory: Available:     11.486 MB
+Virtual Memory: In Use:        11.696 MB
+Page File Location(s):         G:\pagefile.sys
+Domain:                        WORKGROUP
+Logon Server:                  \\DESKTOP-EIUQB5T
+Hotfix(s):                     4 Hotfix(s) Installed.
+                               [01]: KB5066131
+                               [02]: KB5068861
+                               [03]: KB5067360
+                               [04]: KB5067035
+Network Card(s):               2 NIC(s) Installed.
+                               [01]: Intel(R) Wi-Fi 6 AX201 160MHz
+                                     Connection Name: Wi-Fi
+                                     DHCP Enabled:    Yes
+                                     DHCP Server:     192.168.1.1
+                                     IP address(es)
+                                     [01]: 192.168.1.54
+                                     [02]: fe80::e79f:df28:ab7b:aff1
+                               [02]: Bluetooth Device (Personal Area Network)
+                                     Connection Name: Bluetooth Network Connection
+                                     Status:          Media disconnected
+Virtualization-based security: Status: Running
+                               Required Security Properties:
+                               Available Security Properties:
+                                     Base Virtualization Support
+                                     Secure Boot
+                                     DMA Protection
+                                     Mode Based Execution Control
+                                     APIC Virtualization
+                               Services Configured:
+                               Services Running:
+                               App Control for Business policy: Enforced
+                               App Control for Business user mode policy: Off
+                               Security Features Enabled:
+Hyper-V Requirements:          A hypervisor has been detected. Features required for Hyper-V will not be displayed.                                                                                            
+
+## Mục 1 - Serial 
+
+B1: biên dịch code: 
+cd "c:\Users\Men\OneDrive\Máy tính\parallel computing\Adaptive-Huffman-Coding\Serial Code"
+g++ -fopenmp -o serial serial.cpp
+
+B2: chạy file test 
+.\serial.exe 10           # Test với file 10.txt
+.\serial.exe 100          # Test với file 100.txt  
+.\serial.exe 1000         # Test với file 1000.txt
+.\serial.exe 10000        # Test với file 10000.txt
+.\serial.exe 100000       # Test với file 100000.txt
+.\serial.exe 1000000      # Test với file 1000000.txt
+.\serial.exe 10000000     # Test với file 10000000.txt
+
+## Mục 2 - OpenMP Parallel Version
+
+B1: Biên dịch code:
+cd "c:\Users\Men\OneDrive\Máy tính\parallel computing\Adaptive-Huffman-Coding\OpenMP"
+g++ -fopenmp -o openmp_huffman open_mp_parallel.cpp
+
+B2: Chạy file test:
+.\openmp_huffman.exe           # Test với file test.txt (default)
+.\openmp_huffman.exe test      # Test với file test.txt
+.\openmp_huffman.exe repeat    # Test với file repeat.txt
+.\openmp_huffman.exe 10        # Test với file 10.txt
+.\openmp_huffman.exe 100       # Test với file 100.txt
+.\openmp_huffman.exe 1000      # Test với file 1000.txt
+.\openmp_huffman.exe 10000     # Test với file 10000.txt
+.\openmp_huffman.exe 100000    # Test với file 100000.txt
+.\openmp_huffman.exe 1000000   # Test với file 1000000.txt
+.\openmp_huffman.exe 10000000  # Test với file 10000000.txt
+
+## Mục 3 - MPI Parallel Version
+
+B1: Biên dịch code:
+cd "c:\Users\Men\OneDrive\Máy tính\parallel computing\Adaptive-Huffman-Coding\MPI"
+g++ -I"C:\Program Files (x86)\Microsoft SDKs\MPI\Include" -fopenmp mpi_adaptive_huffman.cpp -L"C:\Program Files (x86)\Microsoft SDKs\MPI\Lib\x64" -lmsmpi -o mpi_huffman.exe
+
+B2: Chạy file test:
+# Cần thêm MPI vào PATH trước khi chạy:
+$env:PATH += ";C:\Program Files\Microsoft MPI\Bin"
+
+# Chạy với số processes khác nhau:
+mpiexec -n 2 .\mpi_huffman.exe           # Test với file test.txt, 2 processes
+mpiexec -n 2 .\mpi_huffman.exe test      # Test với file test.txt, 2 processes  
+mpiexec -n 2 .\mpi_huffman.exe repeat    # Test với file repeat.txt, 2 processes
+mpiexec -n 2 .\mpi_huffman.exe 10        # Test với file 10.txt, 2 processes
+mpiexec -n 4 .\mpi_huffman.exe 100       # Test với file 100.txt, 4 processes
+mpiexec -n 4 .\mpi_huffman.exe 1000      # Test với file 1000.txt, 4 processes
+mpiexec -n 8 .\mpi_huffman.exe 10000     # Test với file 10000.txt, 8 processes
+
+## So sánh Performance
+
+Để so sánh hiệu suất, chạy cùng một test với các phiên bản:
+1. Serial: .\serial.exe 100
+2. OpenMP: .\openmp_huffman.exe 100  
+3. MPI 2 processes: mpiexec -n 2 .\mpi_huffman.exe 100
+4. MPI 4 processes: mpiexec -n 4 .\mpi_huffman.exe 100
