@@ -509,7 +509,6 @@ string Decoder(string &encoded, int &e, int &r)
     
     return decoded;
 }
-
 int main(int argc, char** argv) 
 {
     MPI_Init(&argc, &argv);
@@ -520,13 +519,10 @@ int main(int argc, char** argv)
     
     string input_text;
     
-    // Only rank 0 handles input/output
     if (my_rank == 0) {
         cout << "Using " << nprocs << " MPI processes" << endl;
         
-        // Kiểm tra tham số dòng lệnh
         string filename;
-        
         if (argc > 1) {
             filename = "../Tests/" + string(argv[1]) + ".txt";
         } else {
@@ -534,6 +530,7 @@ int main(int argc, char** argv)
         }
         
         cout << "Processing file: " << filename << endl;
+
         ifstream file(filename);
         if (file.is_open()) {
             string line;
@@ -542,101 +539,95 @@ int main(int argc, char** argv)
             }
             file.close();
         } else {
-            // Nếu không đọc được file, dùng test string mặc định
             input_text = "hello world hello hello";
-            cout << "Could not open file, using default test string" << endl;
+            cout << "Could not open file, using default string" << endl;
         }
-        
+
         cout << "Input length: " << input_text.length() << endl;
-        cout << "Original string: \"" << input_text << "\"" << endl;
+        // cout << "Original string: \"" << input_text << "\"" << endl;
     }
     
-    // Broadcast string length to all processes
     int text_length;
-    if (my_rank == 0) {
-        text_length = input_text.length();
-    }
+    if (my_rank == 0) text_length = input_text.length();
+
     MPI_Bcast(&text_length, 1, MPI_INT, 0, MPI_COMM_WORLD);
     
-    // Broadcast string content to all processes
-    if (my_rank != 0) {
-        input_text.resize(text_length);
-    }
+    // Broadcast content
+    if (my_rank != 0) input_text.resize(text_length);
     MPI_Bcast(&input_text[0], text_length, MPI_CHAR, 0, MPI_COMM_WORLD);
     
     int e = 6, r = 64;
     
-    // Tính phân đoạn cho mỗi process
     int part = text_length / nprocs;
     int start = part * my_rank;
-    int end;
+    int end = (my_rank == nprocs - 1) ? text_length - 1 : (my_rank + 1) * part - 1;
     
-    if (my_rank == nprocs - 1) {
-        end = text_length - 1;
-    } else {
-        end = (my_rank + 1) * part - 1;
-    }
-    
-    // Đo thời gian encoding
     double begin_encode, end_encode;
-    if (my_rank == 0) {
-        begin_encode = omp_get_wtime();
-    }
-    
-    // Mỗi process encode phần của mình
+    if (my_rank == 0) begin_encode = omp_get_wtime();
+
     string local_encoded = Encoder(input_text, e, r, start, end);
-    
-    // Gather tất cả encoded strings về rank 0
-    vector<string> all_encoded(nprocs);
-    vector<int> encoded_lengths(nprocs);
     int local_length = local_encoded.length();
-    
-    MPI_Gather(&local_length, 1, MPI_INT, &encoded_lengths[0], 1, MPI_INT, 0, MPI_COMM_WORLD);
-    
+
+    vector<int> encoded_lengths(nprocs);
+
+    MPI_Gather(&local_length, 1, MPI_INT,
+               encoded_lengths.data(), 1,
+               MPI_INT, 0, MPI_COMM_WORLD);
+
+    vector<string> all_encoded(nprocs);
+
     if (my_rank == 0) {
         all_encoded[0] = local_encoded;
-        for (int i = 1; i < nprocs; i++) {
-            string temp(encoded_lengths[i], ' ');
-            MPI_Recv(&temp[0], encoded_lengths[i], MPI_CHAR, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            all_encoded[i] = temp;
+        for (int p = 1; p < nprocs; p++) {
+            string tmp(encoded_lengths[p], ' ');
+            MPI_Recv(&tmp[0], encoded_lengths[p], MPI_CHAR,
+                     p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            all_encoded[p] = tmp;
         }
         end_encode = omp_get_wtime();
     } else {
-        MPI_Send(&local_encoded[0], local_length, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+        MPI_Send(local_encoded.data(), local_length, MPI_CHAR,
+                 0, 0, MPI_COMM_WORLD);
     }
-    
-    // Rank 0 thực hiện decoding và hiển thị kết quả
+
+    double begin_decode;
+    if (my_rank == 0) begin_decode = omp_get_wtime();
+
+    // mỗi tiến trình tự giải mã phần của nó
+    string local_decoded = Decoder(local_encoded, e, r);
+    int local_dec_len = local_decoded.length();
+
+    // Gather độ dài decoded
+    vector<int> decoded_lengths(nprocs);
+    MPI_Gather(&local_dec_len, 1, MPI_INT,
+               decoded_lengths.data(), 1,
+               MPI_INT, 0, MPI_COMM_WORLD);
+
     if (my_rank == 0) {
-        // Tính tổng độ dài encoded
-        int total_encoded_length = 0;
-        string full_encoded = "";
-        for (int i = 0; i < nprocs; i++) {
-            total_encoded_length += all_encoded[i].length();
-            full_encoded += all_encoded[i];
+        string decoded_text = local_decoded;
+
+        for (int p = 1; p < nprocs; p++) {
+            string tmp(decoded_lengths[p], ' ');
+            MPI_Recv(&tmp[0], decoded_lengths[p], MPI_CHAR,
+                     p, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            decoded_text += tmp;
         }
-        
-        cout << "Encoded Length: " << total_encoded_length << endl;
-        cout << "Encoded string: " << full_encoded << endl;
-        cout << "Encoder Time: " << (end_encode - begin_encode) << " seconds" << endl;
-        
-        // Đo thời gian decoding
-        double begin_decode = omp_get_wtime();
-        
-        // Decode từng phần và ghép lại
-        string decoded_text = "";
-        for (int i = 0; i < nprocs; i++) {
-            string part_decoded = Decoder(all_encoded[i], e, r);
-            decoded_text += part_decoded;
-        }
-        
+
         double end_decode = omp_get_wtime();
-        
+        int total_encoded_length = 0;
+        for (int i = 0; i < nprocs; i++)
+            total_encoded_length += encoded_lengths[i];
+
+        cout << "Encoded Length: " << total_encoded_length << endl;
+        cout << "Encoder Time: " << (end_encode - begin_encode) << " seconds" << endl;
+
         cout << "Decoded Length: " << decoded_text.length() << endl;
-        cout << "Decoded string: \"" << decoded_text << "\"" << endl;
         cout << "Decoder Time: " << (end_decode - begin_decode) << " seconds" << endl;
-        
-        // Kiểm tra tính đúng đắn
-        if (input_text == decoded_text) {
+
+        // cout << "Decoded string: \"" << decoded_text << "\"" << endl;
+
+        // Check correctness
+        if (decoded_text == input_text) {
             cout << "Message Decoded Successfully" << endl;
             float compression_ratio = (float)(input_text.length() * 8) / total_encoded_length;
             cout << "Compression Ratio: " << compression_ratio << endl;
@@ -644,10 +635,154 @@ int main(int argc, char** argv)
             cout << "Decoding Failed!" << endl;
         }
     }
+    else {
+        // các tiến trình gửi decoded về rank 0
+        MPI_Send(local_decoded.data(), local_dec_len, MPI_CHAR,
+                 0, 1, MPI_COMM_WORLD);
+    }
     
     MPI_Finalize();
     return 0;
 }
+
+// int main(int argc, char** argv) 
+// {
+//     MPI_Init(&argc, &argv);
+    
+//     int my_rank, nprocs;
+//     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+//     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    
+//     string input_text;
+    
+//     // Only rank 0 handles input/output
+//     if (my_rank == 0) {
+//         cout << "Using " << nprocs << " MPI processes" << endl;
+        
+//         // Kiểm tra tham số dòng lệnh
+//         string filename;
+        
+//         if (argc > 1) {
+//             filename = "../Tests/" + string(argv[1]) + ".txt";
+//         } else {
+//             filename = "../Tests/test.txt";
+//         }
+        
+//         cout << "Processing file: " << filename << endl;
+//         ifstream file(filename);
+//         if (file.is_open()) {
+//             string line;
+//             while (getline(file, line)) {
+//                 input_text += line;
+//             }
+//             file.close();
+//         } else {
+//             // Nếu không đọc được file, dùng test string mặc định
+//             input_text = "hello world hello hello";
+//             cout << "Could not open file, using default test string" << endl;
+//         }
+        
+//         cout << "Input length: " << input_text.length() << endl;
+//         cout << "Original string: \"" << input_text << "\"" << endl;
+//     }
+    
+//     // Broadcast string length to all processes
+//     int text_length;
+//     if (my_rank == 0) {
+//         text_length = input_text.length();
+//     }
+//     MPI_Bcast(&text_length, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    
+//     // Broadcast string content to all processes
+//     if (my_rank != 0) {
+//         input_text.resize(text_length);
+//     }
+//     MPI_Bcast(&input_text[0], text_length, MPI_CHAR, 0, MPI_COMM_WORLD);
+    
+//     int e = 6, r = 64;
+    
+//     // Tính phân đoạn cho mỗi process
+//     int part = text_length / nprocs;
+//     int start = part * my_rank;
+//     int end;
+    
+//     if (my_rank == nprocs - 1) {
+//         end = text_length - 1;
+//     } else {
+//         end = (my_rank + 1) * part - 1;
+//     }
+    
+//     // Đo thời gian encoding
+//     double begin_encode, end_encode;
+//     if (my_rank == 0) {
+//         begin_encode = omp_get_wtime();
+//     }
+    
+//     // Mỗi process encode phần của mình
+//     string local_encoded = Encoder(input_text, e, r, start, end);
+    
+//     // Gather tất cả encoded strings về rank 0
+//     vector<string> all_encoded(nprocs);
+//     vector<int> encoded_lengths(nprocs);
+//     int local_length = local_encoded.length();
+    
+//     MPI_Gather(&local_length, 1, MPI_INT, &encoded_lengths[0], 1, MPI_INT, 0, MPI_COMM_WORLD);
+    
+//     if (my_rank == 0) {
+//         all_encoded[0] = local_encoded;
+//         for (int i = 1; i < nprocs; i++) {
+//             string temp(encoded_lengths[i], ' ');
+//             MPI_Recv(&temp[0], encoded_lengths[i], MPI_CHAR, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//             all_encoded[i] = temp;
+//         }
+//         end_encode = omp_get_wtime();
+//     } else {
+//         MPI_Send(&local_encoded[0], local_length, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+//     }
+    
+//     // Rank 0 thực hiện decoding và hiển thị kết quả
+//     if (my_rank == 0) {
+//         // Tính tổng độ dài encoded
+//         int total_encoded_length = 0;
+//         string full_encoded = "";
+//         for (int i = 0; i < nprocs; i++) {
+//             total_encoded_length += all_encoded[i].length();
+//             full_encoded += all_encoded[i];
+//         }
+        
+//         cout << "Encoded Length: " << total_encoded_length << endl;
+//         cout << "Encoded string: " << full_encoded << endl;
+//         cout << "Encoder Time: " << (end_encode - begin_encode) << " seconds" << endl;
+        
+//         // Đo thời gian decoding
+//         double begin_decode = omp_get_wtime();
+        
+//         // Decode từng phần và ghép lại
+//         string decoded_text = "";
+//         for (int i = 0; i < nprocs; i++) {
+//             string part_decoded = Decoder(all_encoded[i], e, r);
+//             decoded_text += part_decoded;
+//         }
+        
+//         double end_decode = omp_get_wtime();
+        
+//         cout << "Decoded Length: " << decoded_text.length() << endl;
+//         cout << "Decoded string: \"" << decoded_text << "\"" << endl;
+//         cout << "Decoder Time: " << (end_decode - begin_decode) << " seconds" << endl;
+        
+//         // Kiểm tra tính đúng đắn
+//         if (input_text == decoded_text) {
+//             cout << "Message Decoded Successfully" << endl;
+//             float compression_ratio = (float)(input_text.length() * 8) / total_encoded_length;
+//             cout << "Compression Ratio: " << compression_ratio << endl;
+//         } else {
+//             cout << "Decoding Failed!" << endl;
+//         }
+//     }
+    
+//     MPI_Finalize();
+//     return 0;
+// }
 
 /**
 // encode 
