@@ -1,6 +1,6 @@
 ## Mục 0 
 
-my laptop: 
+# my laptop: 
 
 Host Name:                     DESKTOP-EIUQB5T
 OS Name:                       Microsoft Windows 11 Home Single Language
@@ -63,6 +63,68 @@ Virtualization-based security: Status: Running
                                App Control for Business user mode policy: Off
                                Security Features Enabled:
 Hyper-V Requirements:          A hypervisor has been detected. Features required for Hyper-V will not be displayed.                                                                                            
+
+# my pc 
+
+
+
+
+
+
+
+
+
+
+
+
+
+Host Name:                 ADMIN-PC
+OS Name:                   Microsoft Windows 10 IoT Enterprise LTSC   
+OS Version:                10.0.19044 N/A Build 19044
+OS Manufacturer:           Microsoft Corporation
+OS Configuration:          Standalone Workstation
+OS Build Type:             Multiprocessor Free
+Registered Owner:          Admin
+Registered Organization:   N/A
+Product ID:                00436-50000-00000-AAOEM
+Original Install Date:     3/13/2025, 6:43:22 PM
+System Boot Time:          11/23/2025, 4:03:25 PM
+System Manufacturer:       ASUS
+System Model:              System Product Name
+System Type:               x64-based PC
+Processor(s):              1 Processor(s) Installed.
+                           [01]: Intel64 Family 6 Model 165 Stepping 3
+ GenuineIntel ~2904 Mhz                                               BIOS Version:              American Megatrends Inc. 0708, 7/23/2020   
+Windows Directory:         C:\Windows
+System Directory:          C:\Windows\system32
+Boot Device:               \Device\HarddiskVolume1
+System Locale:             en-us;English (United States)
+Input Locale:              en-us;English (United States)
+Time Zone:                 (UTC+07:00) Bangkok, Hanoi, Jakarta        
+Total Physical Memory:     8,100 MB
+Available Physical Memory: 2,147 MB
+Virtual Memory: Max Size:  18,340 MB
+Virtual Memory: Available: 9,745 MB
+Virtual Memory: In Use:    8,595 MB
+Page File Location(s):     D:\pagefile.sys
+Domain:                    WORKGROUP
+Logon Server:              \\ADMIN-PC
+Hotfix(s):                 5 Hotfix(s) Installed.
+                           [01]: KB5034468
+                           [02]: KB5003791
+                           [03]: KB5034763
+                           [04]: KB5034224
+                           [05]: KB5005699
+Network Card(s):           1 NIC(s) Installed.
+                           [01]: Intel(R) Ethernet Connection (12) I21
+9-V                                                                                                    Connection Name: Ethernet
+                                 DHCP Enabled:    Yes
+                                 DHCP Server:     192.168.0.1
+                                 IP address(es)
+                                 [01]: 192.168.0.105
+                                 [02]: fe80::427a:3253:914a:d7c5      
+Hyper-V Requirements:      A hypervisor has been detected. Features re
+quired for Hyper-V will not be displayed.                             
 
 ## Mục 1 - Serial 
 

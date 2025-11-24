@@ -79,9 +79,8 @@ def main():
     
     # Test files
     test_files = ["10", "100", "1000", "10000", "100000", "1000000", "10000000", "shakespeare_ascii"]
-    
-    # Số processors để test (1, 2, 4, 8, 16)
-    processors_list = [1, 2, 4, 8, 16]
+    # Số processors để test (1, 2, 4, 6, 8, 12) 
+    processors_list = [1, 2, 4, 6, 8, 12]
     
     # Kết quả
     results = []
